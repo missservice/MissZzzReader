@@ -2,12 +2,18 @@ package com.zhao.myreader.ui.home.bookstore;
 
 
 import android.os.Bundle;
-import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.zhao.myreader.R;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.RecyclerView;
+
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+
+import com.zhao.myreader.databinding.FragmentBookStoreBinding;
+
+
 
 /**
  * A simple {@link Fragment} subclass.
@@ -15,16 +21,46 @@ import com.zhao.myreader.R;
 public class BookStoreFragment extends Fragment {
 
 
+
+
+
+
+    private BookStorePresenter mBookStorePresenter;
+    private FragmentBookStoreBinding binding;
+
+
     public BookStoreFragment() {
-        // Required empty public constructor
+        mBookStorePresenter = new BookStorePresenter(this);
+
     }
 
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_book_store, container, false);
+        binding = FragmentBookStoreBinding.inflate(inflater,container,false);
+        mBookStorePresenter.enable();
+        mBookStorePresenter.init();
+
+        return binding.getRoot();
+
     }
 
+    public RecyclerView getRvTypeList() {
+        return binding.rvTypeList;
+    }
+
+    public RecyclerView getRvBookList() {
+        return binding.rvBookList;
+    }
+
+    public SmartRefreshLayout getSrlBookList() {
+        return binding.srlBookList;
+    }
+
+    public FragmentBookStoreBinding getBinding() {
+        return binding;
+    }
 }

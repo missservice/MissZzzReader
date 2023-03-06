@@ -1,6 +1,7 @@
 package com.zhao.myreader.application;
 
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Application;
 import android.app.Notification;
@@ -15,6 +16,16 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.scwang.smartrefresh.header.WaveSwipeHeader;
+import com.scwang.smartrefresh.layout.SmartRefreshLayout;
+import com.scwang.smartrefresh.layout.api.DefaultRefreshFooterCreator;
+import com.scwang.smartrefresh.layout.api.DefaultRefreshHeaderCreator;
+import com.scwang.smartrefresh.layout.api.RefreshFooter;
+import com.scwang.smartrefresh.layout.api.RefreshHeader;
+import com.scwang.smartrefresh.layout.api.RefreshLayout;
+import com.scwang.smartrefresh.layout.footer.ClassicsFooter;
+import com.scwang.smartrefresh.layout.header.ClassicsHeader;
+import com.zhao.myreader.R;
 import com.zhao.myreader.base.BaseActivity;
 import com.zhao.myreader.callback.ResultCallback;
 import com.zhao.myreader.common.APPCONST;
@@ -30,9 +41,23 @@ import com.zhao.myreader.util.UriFileUtil;
 import com.zhao.myreader.webapi.CommonApi;
 
 import java.io.File;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
+
+import okhttp3.OkHttpClient;
 
 
 /**
@@ -43,7 +68,20 @@ public class MyApplication extends Application {
 
     private static Handler handler = new Handler();
     private static MyApplication application;
-    private ExecutorService mFixedThreadPool;
+    private ScheduledExecutorService mFixedThreadPool;
+
+    static {
+        //设置全局的Header构建器
+        SmartRefreshLayout.setDefaultRefreshHeaderCreator((context, layout) -> {
+            layout.setPrimaryColorsId(R.color.sys_book_type_bg, R.color.sys_refresh_main);//全局设置主题颜色
+            return new WaveSwipeHeader(context);
+        });
+        //设置全局的Footer构建器
+        SmartRefreshLayout.setDefaultRefreshFooterCreator((context, layout) -> {
+
+            return new ClassicsFooter(context).setDrawableSize(20);
+        });
+    }
 
 
 
@@ -51,12 +89,48 @@ public class MyApplication extends Application {
     public void onCreate() {
         super.onCreate();
         application = this;
-        HttpUtil.trustAllHosts();//信任所有证书
-        mFixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());//初始化线程池
+//        HttpUtil.trustAllHosts();//信任所有证书
+
+
+//        handleSSLHandshake();
+
+        mFixedThreadPool = Executors.newScheduledThreadPool(Math.min(Runtime.getRuntime().availableProcessors(), 2));//初始化线程池   最大线程2是为了限制瞬时访问量，以防止网站反爬虫识别
 
         BaseActivity.setCloseAntiHijacking(true);
 
     }
+
+
+
+
+
+
+
+    @SuppressLint("TrulyRandom")
+    public static void handleSSLHandshake() {
+        try {
+            TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[0];
+                }
+
+                @Override
+                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                }
+            }};
+
+            SSLContext sc = SSLContext.getInstance("SSL");
+            sc.init(null, trustAllCerts, new SecureRandom());
+            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
+            HttpsURLConnection.setDefaultHostnameVerifier((hostname, session) -> true);
+        } catch (Exception ignored) {
+        }
+    }
+
 
 
 
@@ -69,10 +143,11 @@ public class MyApplication extends Application {
     public void newThread(Runnable runnable) {
 
         try {
-            mFixedThreadPool.execute(runnable);
+
+            mFixedThreadPool.schedule(runnable,1,TimeUnit.SECONDS);
         } catch (Exception e) {
             e.printStackTrace();
-            mFixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());//初始化线程池
+            mFixedThreadPool = Executors.newScheduledThreadPool(Math.min(Runtime.getRuntime().availableProcessors(), 3));//初始化线程池
             mFixedThreadPool.execute(runnable);
         }
     }
@@ -82,13 +157,7 @@ public class MyApplication extends Application {
     }
 
 
-    /*@TargetApi(26)
-    private void createNotificationChannel() {
 
-        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-
-        notificationManager.createNotificationChannel(new NotificationChannel("gxdw_push_and_im", "gxdw", NotificationManager.IMPORTANCE_DEFAULT));
-    }*/
 
 
     /**

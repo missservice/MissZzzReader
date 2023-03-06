@@ -134,5 +134,10 @@
     <color name="sys_font_using_btn">#9c9a9c</color>
     <color name="sys_font_use_btn">#31cf4a</color>
 
+    <color name="sys_book_type_bg">#F7F7F7</color>
+
+    <color name="sys_refresh_bg">#E9E9E9</color>
+
+    <color name="sys_refresh_main">#353535</color>
 
 </resources>

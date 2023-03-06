@@ -4,9 +4,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Typeface;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.constraint.solver.SolverVariable;
+
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,12 +12,15 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.zhao.myreader.R;
 import com.zhao.myreader.application.SysManager;
 import com.zhao.myreader.common.APPCONST;
 import com.zhao.myreader.entity.Setting;
 import com.zhao.myreader.enums.Font;
-import com.zhao.myreader.greendao.entity.Chapter;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -56,10 +57,11 @@ public class FontsAdapter extends ArrayAdapter<Font> {
         ViewHolder viewHolder = null;
         if (convertView == null) {
             viewHolder = new ViewHolder();
+
             convertView = LayoutInflater.from(getContext()).inflate(mResourceId, null);
-            viewHolder.tvFontName = (TextView) convertView.findViewById(R.id.tv_font_name);
-            viewHolder.btnFontUse = (Button) convertView.findViewById(R.id.btn_font_use);
-            viewHolder.tvExample = (TextView)convertView.findViewById(R.id.tv_font_example);
+            viewHolder.tvFontName =  convertView.findViewById(R.id.tv_font_name);
+            viewHolder.btnFontUse =  convertView.findViewById(R.id.btn_font_use);
+            viewHolder.tvExample = convertView.findViewById(R.id.tv_font_example);
             convertView.setTag(viewHolder);
         } else {
             viewHolder = (ViewHolder) convertView.getTag();

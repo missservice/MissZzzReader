@@ -1,12 +1,13 @@
 package com.zhao.myreader.creator;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Build;
-import android.support.v7.app.AlertDialog;
+
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -26,7 +27,7 @@ import com.zhao.myreader.enums.ReadStyle;
 import com.zhao.myreader.util.BrightUtil;
 import com.zhao.myreader.util.StringHelper;
 
-import butterknife.BindView;
+
 
 /**
  * Created by zhao on 2017/1/11.

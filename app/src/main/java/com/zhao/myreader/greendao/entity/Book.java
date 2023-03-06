@@ -1,6 +1,8 @@
 package com.zhao.myreader.greendao.entity;
 
-import android.support.annotation.Nullable;
+
+
+import androidx.annotation.Nullable;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -50,14 +52,19 @@ public class Book implements Serializable {
 
     private int lastReadPosition;//上次阅读到的章节的位置
 
+    @Nullable
+    private String source;
 
-    @Generated(hash = 1524295773)
+
+
+
+    @Generated(hash = 1392889320)
     public Book(String id, String name, String chapterUrl, String imgUrl,
             String desc, String author, String type, String updateDate,
             String newestChapterId, String newestChapterTitle,
             String newestChapterUrl, String historyChapterId,
             int histtoryChapterNum, int sortCode, int noReadNum,
-            int chapterTotalNum, int lastReadPosition) {
+            int chapterTotalNum, int lastReadPosition, String source) {
         this.id = id;
         this.name = name;
         this.chapterUrl = chapterUrl;
@@ -75,6 +82,7 @@ public class Book implements Serializable {
         this.noReadNum = noReadNum;
         this.chapterTotalNum = chapterTotalNum;
         this.lastReadPosition = lastReadPosition;
+        this.source = source;
     }
     @Generated(hash = 1839243756)
     public Book() {
@@ -181,9 +189,12 @@ public class Book implements Serializable {
     public void setLastReadPosition(int lastReadPosition) {
         this.lastReadPosition = lastReadPosition;
     }
-
-
-
+    public String getSource() {
+        return this.source;
+    }
+    public void setSource(String source) {
+        this.source = source;
+    }
 
 
 }

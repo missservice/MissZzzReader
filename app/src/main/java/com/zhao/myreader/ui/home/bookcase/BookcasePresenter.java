@@ -1,30 +1,32 @@
 package com.zhao.myreader.ui.home.bookcase;
 
-import android.content.DialogInterface;
+
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v4.content.ContextCompat;
+
 import android.view.View;
 import android.widget.AdapterView;
+
+import androidx.core.content.ContextCompat;
 
 import com.scwang.smartrefresh.layout.api.RefreshLayout;
 import com.scwang.smartrefresh.layout.listener.OnRefreshListener;
 import com.zhao.myreader.R;
 import com.zhao.myreader.base.BasePresenter;
 import com.zhao.myreader.callback.ResultCallback;
-import com.zhao.myreader.common.APPCONST;
-import com.zhao.myreader.creator.DialogCreator;
+
 import com.zhao.myreader.custom.DragSortGridView;
 import com.zhao.myreader.greendao.entity.Book;
 import com.zhao.myreader.greendao.entity.Chapter;
 import com.zhao.myreader.greendao.service.BookService;
-import com.zhao.myreader.greendao.service.ChapterService;
+
 import com.zhao.myreader.ui.home.MainActivity;
-import com.zhao.myreader.ui.read.ReadActivity;
+
 import com.zhao.myreader.ui.search.SearchBookActivity;
-import com.zhao.myreader.util.StringHelper;
+
 import com.zhao.myreader.util.VibratorUtil;
 import com.zhao.myreader.webapi.CommonApi;
 
@@ -34,7 +36,7 @@ import java.util.ArrayList;
  * Created by zhao on 2017/7/25.
  */
 
-public class BookcasePresenter implements BasePresenter {
+public class BookcasePresenter extends BasePresenter {
 
     private BookcaseFragment mBookcaseFragment;
     private ArrayList<Book> mBooks = new ArrayList<>();//书目数组
@@ -43,6 +45,7 @@ public class BookcasePresenter implements BasePresenter {
     private MainActivity mMainActivity;
 //    private ChapterService mChapterService;
 
+    @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -59,18 +62,19 @@ public class BookcasePresenter implements BasePresenter {
         }
     };
 
-    public BookcasePresenter(BookcaseFragment bookcaseFragment) {
+    BookcasePresenter(BookcaseFragment bookcaseFragment) {
+        super(bookcaseFragment.getContext(),bookcaseFragment.getLifecycle());
         mBookcaseFragment = bookcaseFragment;
         mBookService = new BookService();
-        mMainActivity = ((MainActivity) (mBookcaseFragment.getActivity()));
-//        mChapterService = new ChapterService();
+
     }
 
     @Override
     public void start() {
+        mMainActivity = ((MainActivity) (mBookcaseFragment.getContext()));
         mBookcaseFragment.getSrlContent().setEnableRefresh(false);
         mBookcaseFragment.getSrlContent().setEnableHeaderTranslationContent(false);
-        mBookcaseFragment.getSrlContent().setEnableLoadmore(false);
+        mBookcaseFragment.getSrlContent().setEnableLoadMore(false);
         mBookcaseFragment.getSrlContent().setOnRefreshListener(new OnRefreshListener() {
             @Override
             public void onRefresh(RefreshLayout refreshlayout) {
@@ -87,32 +91,26 @@ public class BookcasePresenter implements BasePresenter {
             }
         });
 
-        mBookcaseFragment.getGvBook().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
-            @Override
-            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                if (!mBookcaseAdapter.ismEditState()) {
-                    mBookcaseFragment.getSrlContent().setEnableRefresh(false);
-                    mBookcaseAdapter.setmEditState(true);
-                    mBookcaseFragment.getGvBook().setDragModel(DragSortGridView.DRAG_BY_LONG_CLICK);
-                    mBookcaseAdapter.notifyDataSetChanged();
-                    mMainActivity.getRlCommonTitle().setVisibility(View.GONE);
-                    mMainActivity.getRlEditTitile().setVisibility(View.VISIBLE);
-                    VibratorUtil.Vibrate(mBookcaseFragment.getActivity(),200);
-//                    mBookcaseFragment.getGvBook().setOnItemClickListener(null);
-                }
-                return true;
-            }
-        });
-        mMainActivity.getTvEditFinish().setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                mMainActivity.getRlCommonTitle().setVisibility(View.VISIBLE);
-                mMainActivity.getRlEditTitile().setVisibility(View.GONE);
-//                mBookcaseFragment.getSrlContent().setEnableRefresh(true);
-                mBookcaseFragment.getGvBook().setDragModel(-1);
-                mBookcaseAdapter.setmEditState(false);
+        mBookcaseFragment.getGvBook().setOnItemLongClickListener((parent, view, position, id) -> {
+            if (!mBookcaseAdapter.ismEditState()) {
+                mBookcaseFragment.getSrlContent().setEnableRefresh(false);
+                mBookcaseAdapter.setmEditState(true);
+                mBookcaseFragment.getGvBook().setDragModel(DragSortGridView.DRAG_BY_LONG_CLICK);
                 mBookcaseAdapter.notifyDataSetChanged();
+                mMainActivity.getRlCommonTitle().setVisibility(View.GONE);
+                mMainActivity.getRlEditTitile().setVisibility(View.VISIBLE);
+                VibratorUtil.Vibrate(mBookcaseFragment.getActivity(),200);
+//                    mBookcaseFragment.getGvBook().setOnItemClickListener(null);
             }
+            return true;
+        });
+        mMainActivity.getTvEditFinish().setOnClickListener(v -> {
+            mMainActivity.getRlCommonTitle().setVisibility(View.VISIBLE);
+            mMainActivity.getRlEditTitile().setVisibility(View.GONE);
+//                mBookcaseFragment.getSrlContent().setEnableRefresh(true);
+            mBookcaseFragment.getGvBook().setDragModel(-1);
+            mBookcaseAdapter.setmEditState(false);
+            mBookcaseAdapter.notifyDataSetChanged();
         });
     }
 
@@ -125,7 +123,7 @@ public class BookcasePresenter implements BasePresenter {
             if(mBookcaseAdapter == null) {
                 mBookcaseAdapter = new BookcaseDragAdapter(mBookcaseFragment.getContext(), R.layout.gridview_book_item, mBooks, false);
                 mBookcaseFragment.getGvBook().setDragModel(-1);
-                mBookcaseFragment.getGvBook().setTouchClashparent(((MainActivity) (mBookcaseFragment.getActivity())).getVpContent());
+                mBookcaseFragment.getGvBook().setTouchClashparent(((MainActivity) (mBookcaseFragment.getContext())).getVpContent());
        /*     mBookcaseFragment.getGvBook().setDragModel(DragSortGridView.DRAG_BY_LONG_CLICK);
             ((MainActivity) (mBookcaseFragment.getActivity())).setViewPagerScroll(false);*/
                 mBookcaseFragment.getGvBook().setAdapter(mBookcaseAdapter);
@@ -156,7 +154,7 @@ public class BookcasePresenter implements BasePresenter {
 
     private void initNoReadNum() {
         for (final Book book : mBooks) {
-            CommonApi.getBookChapters(book.getChapterUrl(), new ResultCallback() {
+            CommonApi.getBookChapters(book, new ResultCallback() {
                 @Override
                 public void onFinish(Object o, int code) {
                     final ArrayList<Chapter> chapters = (ArrayList<Chapter>) o;
@@ -185,6 +183,12 @@ public class BookcasePresenter implements BasePresenter {
         if (Build.VERSION.SDK_INT >= 21) {
             mBookcaseFragment.getActivity().getWindow().setStatusBarColor(ContextCompat.getColor(mBookcaseFragment.getContext(), colorPrimaryDark));
         }
+    }
+
+
+    @Override
+    public void resume(){
+        getData();
     }
 
 }

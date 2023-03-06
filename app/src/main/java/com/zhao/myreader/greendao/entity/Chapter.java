@@ -1,6 +1,10 @@
 package com.zhao.myreader.greendao.entity;
 
-import android.support.annotation.Nullable;
+
+
+import androidx.annotation.Nullable;
+
+import com.zhao.myreader.greendao.service.BookService;
 
 import org.greenrobot.greendao.annotation.Entity;
 import org.greenrobot.greendao.annotation.Generated;
@@ -73,6 +77,9 @@ public class Chapter {
     public void setContent(String content) {
         this.content = content;
     }
+
+
+
 
 
   

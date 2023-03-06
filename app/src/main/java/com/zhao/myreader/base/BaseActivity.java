@@ -1,10 +1,11 @@
 package com.zhao.myreader.base;
 
 import android.annotation.TargetApi;
+import android.app.Activity;
 import android.content.Context;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -12,7 +13,9 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 
-import com.zhao.myreader.ActivityManage;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.zhao.myreader.application.ActivityManage;
 import com.zhao.myreader.util.Anti_hijackingUtils;
 import com.zhao.myreader.util.SystemBarTintManager;
 
@@ -117,12 +120,12 @@ public class BaseActivity extends AppCompatActivity {
      * @param colorId
      */
     public void setStatusBar(int colorId){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            setTranslucentStatus(true);
-            SystemBarTintManager tintManager = new SystemBarTintManager(this);
-            tintManager.setStatusBarTintEnabled(true);
-            tintManager.setStatusBarTintResource(colorId);//通知栏所需颜色ID
-        }
+
+        setTranslucentStatus(true);
+        SystemBarTintManager tintManager = new SystemBarTintManager(this);
+        tintManager.setStatusBarTintEnabled(true);
+        tintManager.setStatusBarTintResource(colorId);//通知栏所需颜色ID
+
     }
 
     public InputMethodManager getmInputMethodManager() {

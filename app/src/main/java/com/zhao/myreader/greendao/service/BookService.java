@@ -11,6 +11,7 @@ import com.zhao.myreader.util.StringHelper;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Created by zhao on 2017/7/24.
@@ -30,7 +31,7 @@ public class BookService extends BaseService {
             Cursor cursor = selectBySql(sql, selectionArgs);
             while (cursor.moveToNext()) {
                 Book book = new Book();
-              book.setId(cursor.getString(0));
+                book.setId(cursor.getString(0));
                 book.setName(cursor.getString(1));
                 book.setChapterUrl(cursor.getString(2));
                 book.setImgUrl(cursor.getString(3));
@@ -47,6 +48,7 @@ public class BookService extends BaseService {
                 book.setNoReadNum(cursor.getInt(14));
                 book.setChapterTotalNum(cursor.getInt(15));
                 book.setLastReadPosition(cursor.getInt(16));
+                book.setSource(cursor.getString(17));
                 books.add(book);
             }
         } catch (Exception e) {
@@ -80,7 +82,7 @@ public class BookService extends BaseService {
      */
     public void addBook(Book book){
         book.setSortCode(countBookTotalNum() + 1);
-        book.setId(StringHelper.getStringRandom(25));
+        book.setId(UUID.randomUUID().toString());
         addEntity(book);
     }
 
@@ -90,10 +92,10 @@ public class BookService extends BaseService {
      * @param bookName
      * @return
      */
-    public Book findBookByAuthorAndName(String bookName, String author){
+    public Book findBookByAuthorAndName(String bookName, String author,String source){
         Book book = null;
         try {
-            Cursor cursor = selectBySql("select id from book where author = ? and name = ?",new String[]{author,bookName});
+            Cursor cursor = selectBySql("select id from book where author = ? and name = ? and source = ?",new String[]{author,bookName,source});
             if (cursor.moveToNext()){
                 String id = cursor.getString(0);
                 book = getBookById(id);

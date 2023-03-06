@@ -1,26 +1,29 @@
 package com.zhao.myreader.ui.read;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Typeface;
 import android.os.Handler;
 import android.os.Message;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
-import android.text.InputType;
+
+
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
+
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageView;
+
 import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.spreada.utils.chinese.ZHConverter;
 import com.zhao.myreader.R;
 import com.zhao.myreader.application.SysManager;
 import com.zhao.myreader.callback.ResultCallback;
-import com.zhao.myreader.custom.ContainsEmojiEditText;
+
 import com.zhao.myreader.custom.MyTextView;
 import com.zhao.myreader.entity.Setting;
 import com.zhao.myreader.enums.Font;
@@ -57,6 +60,7 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
     private Context mContext;
     private RecyclerView rvContent;
 
+    @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -69,7 +73,8 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
         }
     };
 
-    public ReadContentAdapter(Context context, int resourceId, ArrayList<Chapter> datas, Book book) {
+
+    ReadContentAdapter(Context context, int resourceId, ArrayList<Chapter> datas, Book book) {
         mInflater = LayoutInflater.from(context);
         mDatas = datas;
         mResourceId = resourceId;
@@ -81,9 +86,9 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
         initFont();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
-        public ViewHolder(View arg0) {
+        ViewHolder(View arg0) {
             super(arg0);
         }
 
@@ -111,9 +116,9 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
         if (rvContent == null) rvContent = (RecyclerView) viewGroup;
         View view = mInflater.inflate(mResourceId, viewGroup, false);
         ViewHolder viewHolder = new ViewHolder(view);
-        viewHolder.tvTitle = (MyTextView) view.findViewById(R.id.tv_title);
-        viewHolder.tvContent = (MyTextView) view.findViewById(R.id.tv_content);
-        viewHolder.tvErrorTips = (TextView) view.findViewById(R.id.tv_loading_error_tips);
+        viewHolder.tvTitle = view.findViewById(R.id.tv_title);
+        viewHolder.tvContent = view.findViewById(R.id.tv_content);
+        viewHolder.tvErrorTips = view.findViewById(R.id.tv_loading_error_tips);
         return viewHolder;
     }
 
@@ -123,31 +128,17 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
      * 设置值
      */
     @Override
-    public void onBindViewHolder(final ViewHolder viewHolder, final int i) {
+    public void onBindViewHolder(@NonNull final ViewHolder viewHolder, final int i) {
         initView(i, viewHolder);
 
-       /* if (mOnTouchListener != null){
-            viewHolder.tvContent.setmOnTouchListener(mOnTouchListener);
-        }
 
-        viewHolder.tvContent.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mOnClickItemListener != null) {
-                    mOnClickItemListener.onClick(viewHolder.itemView, i);
-                }
-            }
-        });*/
         if (mOnTouchListener != null){
             viewHolder.itemView.setOnTouchListener(mOnTouchListener);
         }
 
-        viewHolder.itemView.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (mOnClickItemListener != null) {
-                    mOnClickItemListener.onClick(viewHolder.itemView, i);
-                }
+        viewHolder.itemView.setOnClickListener(v -> {
+            if (mOnClickItemListener != null) {
+                mOnClickItemListener.onClick(viewHolder.itemView, i);
             }
         });
 
@@ -156,9 +147,6 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
     private void initView(final int postion, final ViewHolder viewHolder) {
         final Chapter chapter = getItem(postion);
 
-
-//        hiddenSoftInput(viewHolder.tvContent);
-//        hiddenSoftInput(viewHolder.tvTitle);
         viewHolder.tvContent.setTypeface(mTypeFace);
         viewHolder.tvTitle.setTypeface(mTypeFace);
         viewHolder.tvErrorTips.setVisibility(View.GONE);
@@ -173,12 +161,7 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
 
         viewHolder.tvTitle.setTextSize(mSetting.getReadWordSize() + 2);
         viewHolder.tvContent.setTextSize(mSetting.getReadWordSize());
-        viewHolder.tvErrorTips.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                getChapterContent(chapter, viewHolder);
-            }
-        });
+        viewHolder.tvErrorTips.setOnClickListener(view -> getChapterContent(chapter, viewHolder));
         if (StringHelper.isEmpty(chapter.getContent())) {
             getChapterContent(chapter, viewHolder);
         } else {
@@ -191,10 +174,6 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
         preLoading(postion);
 
         lastLoading(postion);
-
-
-
-//        saveHistory(postion);
 
     }
 
@@ -306,7 +285,7 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
         }
     }
 
-    public void initFont() {
+    private void initFont() {
         if (mSetting.getFont() == Font.默认字体) {
             mTypeFace = null;
         } else {
@@ -327,11 +306,11 @@ public class ReadContentAdapter extends RecyclerView.Adapter<ReadContentAdapter.
         }
     }
 
-    public void setmOnClickItemListener(OnClickItemListener mOnClickItemListener) {
+    void setmOnClickItemListener(OnClickItemListener mOnClickItemListener) {
         this.mOnClickItemListener = mOnClickItemListener;
     }
 
-    public void setmOnTouchListener(View.OnTouchListener mOnTouchListener) {
+    void setmOnTouchListener(View.OnTouchListener mOnTouchListener) {
         this.mOnTouchListener = mOnTouchListener;
     }
 

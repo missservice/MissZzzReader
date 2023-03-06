@@ -6,6 +6,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 import com.zhao.myreader.application.MyApplication;
+import com.zhao.myreader.application.TrustAllCerts;
 import com.zhao.myreader.callback.HttpCallback;
 import com.zhao.myreader.callback.JsonCallback;
 import com.zhao.myreader.callback.URLConnectionCallback;
@@ -23,6 +24,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
+import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
@@ -30,8 +32,11 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
@@ -57,13 +62,60 @@ public class HttpUtil {
     //因为每个OkHttpClient 实例都有自己的连接池和线程池，重用这个实例能降低延时，减少内存消耗，而重复创建新实例则会浪费资源。
     private static OkHttpClient mClient;
 
+
+
+    static final TrustManager[] trustAllCerts = new TrustManager[]{
+            new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(X509Certificate[] chain, String authType) {
+                }
+
+                @Override
+                public void checkServerTrusted(X509Certificate[] chain, String authType) {
+                }
+
+
+
+
+                @Override
+                public X509Certificate[] getAcceptedIssuers() {
+                    return new X509Certificate[]{};
+                }
+            }
+    };
+
+
+
+    private static SSLSocketFactory createSSLSocketFactory() {
+        SSLSocketFactory ssfFactory = null;
+
+        try {
+
+            SSLContext sslContext = SSLContext.getInstance("SSL");
+
+            sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+
+            ssfFactory = sslContext.getSocketFactory();
+        } catch (Exception e) {
+        }
+
+        return ssfFactory;
+    }
+
+
+
     private static synchronized OkHttpClient getOkHttpClient(){
         if (mClient == null){
-           mClient = new OkHttpClient.Builder()
-                    .readTimeout(5000,TimeUnit.SECONDS)//设置读取超时时间
-                    .writeTimeout(5000,TimeUnit.SECONDS)//设置写的超时时间
-                    .connectTimeout(5000,TimeUnit.SECONDS)//设置连接超时时间
-                    .build();
+
+            OkHttpClient.Builder builder = new OkHttpClient.Builder();
+            builder.connectTimeout(30, TimeUnit.SECONDS);
+            builder.sslSocketFactory(createSSLSocketFactory(), (X509TrustManager) trustAllCerts[0]);
+            builder.hostnameVerifier((hostname, session) ->
+                    true);
+
+
+           mClient = builder.build();
+
         }
         return mClient;
 
@@ -204,56 +256,23 @@ public class HttpUtil {
     }
 
     public static void sendGetRequest_okHttp(final String address, final HttpCallback callback) {
-       MyApplication.getApplication().newThread(new Runnable() {
-            @Override
-            public void run() {
-             /*   HttpURLConnection connection = null;
-                try {
-                    URL url = new URL(address);
-                    connection = (HttpURLConnection) url.openConnection();
-                    connection.setRequestMethod("GET");
-                    connection.setRequestProperty("Content-type", "text/html");
-                    connection.setRequestProperty("Accept-Charset", "gbk");
-                    connection.setRequestProperty("contentType", "gbk");
-                    connection.setConnectTimeout(5 * 1000);
-                    connection.setReadTimeout(5 * 1000);
-                    connection.setDoInput(true);
-                    connection.setDoOutput(true);
-                    if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                        Log.e("Http", "网络错误异常！!!!");
-                    }
-                    InputStream in = connection.getInputStream();
-                    Log.d("Http", "connection success");
-                    if (callback != null) {
-                        callback.onFinish(in);
-                    }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    Log.e("Http", e.toString());
-                    if (callback != null) {
-                        callback.onError(e);
-                    }
-                } finally {
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
-                }*/
-                try{
-                     OkHttpClient client = getOkHttpClient();
-                    Request request = new Request.Builder()
-                            .url(address)
-                            .build();
+       MyApplication.getApplication().newThread(() -> {
 
-                    Response response = client.newCall(request).execute();
-                    callback.onFinish(response.body().byteStream());
+           try{
 
-                }catch(Exception e){
-                    e.printStackTrace();
-                    callback.onError(e);
-                }
-            }
+                OkHttpClient client = getOkHttpClient();
+               Request request = new Request.Builder()
+                       .url(address)
+                       .build();
 
-        });
+               Response response = client.newCall(request).execute();
+               callback.onFinish(response.body().byteStream());
+
+           }catch(Exception e){
+               e.printStackTrace();
+               callback.onError(e);
+           }
+       });
     }
 
     /**
